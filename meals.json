@@ -1,5 +1,6 @@
 [
   {"name": "Tacos", "ethnicity": "Mexican", "difficulty": "easy", "image": "assets/tacos.png", "disliked_by": []},
+  {"name": "Mash Potato Tacos", "ethnicity": "Mexican", "difficulty": "hard", "image": "assets/mptacos.png", "disliked_by": []},
   {"name": "Enchiladas", "ethnicity": "Mexican", "difficulty": "medium", "image": "assets/enchiladas.png", "disliked_by": []},
   {"name": "Tofu Stir Fry", "ethnicity": "Asian", "difficulty": "easy", "image": "assets/tofustirfry.png", "disliked_by": []},
   {"name": "Cauliflower Paneer", "ethnicity": "Indian", "difficulty": "medium", "image": "assets/cauliflowerpaneer.png", "disliked_by": []},
@@ -36,6 +37,9 @@
   {"name": "Arepas", "ethnicity": "Venezuelan", "difficulty": "hard", "image": "assets/arepas.png", "disliked_by": []},
   {"name": "Lemony Israeli Couscous", "ethnicity":  "Israeli", "difficulty": "medium", "image": "assets/lemoncouscous.png"},
   {"name": "Fried Rice", "ethnicity":  "Asian", "difficulty": "easy", "image": "assets/friedrice.png"},
+  {"name": "BLTA", "ethnicity":  "American", "difficulty": "easy", "image": "assets/blta.png"},
+  {"name": "Sweet Potato Katsu", "ethnicity":  "Asian", "difficulty": "hard", "image": "assets/spkatsu.png.png"},
+  {"name": "Spring Rolls", "ethnicity":  "Asian", "difficulty": "medium", "image": "assets/springrolls.png"},
   {"name": "Something new and interesting", "ethnicity": "French", "difficulty": "hard", "image": "assets/newandinteresting.png", "disliked_by": []}
 ]
 
