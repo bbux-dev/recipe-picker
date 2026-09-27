@@ -25,12 +25,13 @@ The app is deployed as a static site with [SST](https://sst.dev) (`sst.config.ts
 S3 bucket behind CloudFront, with a Cloudflare DNS record for `mealpicker.bxtn.dev`. The plan and its cost rules are
 in [`.planning/notes/sst-aws-hosting-plan.md`](.planning/notes/sst-aws-hosting-plan.md).
 
-Deploying needs these in the environment (never commit them). The same values as `../lang-learning/.env` work:
+Deploy settings live in a gitignored `.env` that [direnv](https://direnv.net) loads through `.envrc`. Copy
+`.env-example` to `.env`, fill it in, and run `direnv allow` once. It holds:
 
-- `AWS_PROFILE=rembr-dev` (or another AWS credential source for the target account).
+- `AWS_PROFILE` for the target account.
+- `MEALPICKER_EXPECTED_AWS_ACCOUNT`, so a deploy to the wrong account is refused.
 - `CLOUDFLARE_API_TOKEN`, scoped to Zone:Read and DNS:Edit on the `bxtn.dev` zone only.
 - `CLOUDFLARE_DEFAULT_ACCOUNT_ID`.
-- `MEALPICKER_EXPECTED_AWS_ACCOUNT`, so a deploy to the wrong account is refused.
 
 ```shell
 pnpm install

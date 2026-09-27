@@ -336,9 +336,8 @@ shared with lang-learning).
 Commands, from the repo root:
 
 ```shell
+# .env (gitignored) is loaded by direnv via .envrc; see .env-example.
 aws sso login --profile rembr-dev          # only if the SSO session has expired
-set -a; source ../lang-learning/.env; set +a
-export MEALPICKER_EXPECTED_AWS_ACCOUNT=040678946710
 pnpm install
 bash tools/deploy.sh
 ```
