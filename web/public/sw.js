@@ -1,5 +1,5 @@
 // Bump CACHE_NAME for releases that change sw.js behavior or need to drop old cached files.
-const CACHE_NAME = "recipe-picker-v2";
+const CACHE_NAME = "recipe-picker-v3";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {

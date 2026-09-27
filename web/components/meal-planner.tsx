@@ -4,6 +4,7 @@ import { MealCard } from "@/components/meal-card";
 import { Button } from "@/components/ui/button";
 import { useMealPlannerTools } from "@/hooks/use-meal-planner-tools";
 import { refreshMealPlan } from "@/lib/meal-selection";
+import { version } from "@/package.json";
 import type { Meal } from "@/types/meal";
 
 const STORAGE_KEY = "recipe-picker-plan-v1";
@@ -140,6 +141,8 @@ export function MealPlanner({ meals, initialPlan }: MealPlannerProps) {
             />
           ))}
         </section>
+
+        <footer className="mt-10 text-center text-xs text-[#765d68]">Recipe Picker v{version}</footer>
       </div>
     </main>
   );

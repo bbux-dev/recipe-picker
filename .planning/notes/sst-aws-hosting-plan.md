@@ -364,7 +364,8 @@ Then on a phone: install the PWA, shuffle and lock meals, reload (the plan persi
 
 **Cost: GATE** (one small redeploy, covered by the approval above).
 
-1. Claude makes a visible, trivial change (for example, the header subtitle) and bumps `CACHE_NAME`.
+1. Claude makes a visible change and bumps `CACHE_NAME`. Done: a footer shows `Recipe Picker v<package.json version>`
+   (now 0.2.0), and `CACHE_NAME` is `recipe-picker-v3`.
 2. Brian runs `bash tools/deploy.sh` again.
 3. Verify: the SST output shows one invalidation; a normal reload shows the change; an installed PWA picks up the new
    service worker after one reload; `node tools/smoke.mjs https://mealpicker.bxtn.dev/` passes.
@@ -392,4 +393,6 @@ state. There is no continuously running compute. Cloudflare only provides author
 - [x] Chunk 8: prod deploy (2026-09-27; CloudFront `d198blypkwgz8q.cloudfront.net`. Headers, cache policies, MIME
       types, Amazon cert and the live smoke test all verified. Notes: unknown paths return `index.html` with 200 (the
       StaticSite SPA fallback; harmless here), and `bxtn.dev` has no DS record, so DNSSEC is not enabled)
-- [ ] Chunk 9: update round-trip (**cost gate**, Brian runs)
+- [ ] Chunk 9: update round-trip (**cost gate**, Brian runs). Code is ready; awaiting redeploy
+- [x] DNSSEC enabled on `bxtn.dev` via the Cloudflare API (2026-09-27). Cloudflare is the registrar, so it publishes
+      the DS record itself; confirm with `dig +short bxtn.dev DS` (non-empty) once the status leaves `pending`
