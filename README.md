@@ -4,19 +4,42 @@ The maintained application lives in [`web/`](web/). It is a self-contained React
 
 ## Run the current app
 
-```powershell
+```shell
 cd web
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ## Verify it
 
-```powershell
+```shell
 cd web
-npm test
-npm run build
+pnpm lint
+pnpm test
+pnpm build
 ```
+
+## Hosting
+
+The app is deployed as a static site with [SST](https://sst.dev) (`sst.config.ts`, single stage `prod`): a private
+S3 bucket behind CloudFront, with a Cloudflare DNS record for `mealpicker.bxtn.dev`. The plan and its cost rules are
+in [`.planning/notes/sst-aws-hosting-plan.md`](.planning/notes/sst-aws-hosting-plan.md).
+
+Deploy settings live in a gitignored `.env` that [direnv](https://direnv.net) loads through `.envrc`. Copy
+`.env-example` to `.env`, fill it in, and run `direnv allow` once. It holds:
+
+- `AWS_PROFILE` for the target account.
+- `MEALPICKER_EXPECTED_AWS_ACCOUNT`, so a deploy to the wrong account is refused.
+- `CLOUDFLARE_API_TOKEN`, scoped to Zone:Read and DNS:Edit on the `bxtn.dev` zone only.
+- `CLOUDFLARE_DEFAULT_ACCOUNT_ID`.
+
+```shell
+pnpm install
+bash tools/deploy.sh
+node tools/smoke.mjs https://mealpicker.bxtn.dev/   # browser smoke test against the live site
+```
+
+The stage is protected and its resources are retained if it is ever removed.
 
 ## Legacy desktop prototype
 

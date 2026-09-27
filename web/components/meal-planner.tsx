@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw, Sparkles, UtensilsCrossed } from "lucide-react";
 import { AppMenu } from "@/components/app-menu";
@@ -7,6 +5,7 @@ import { MealCard } from "@/components/meal-card";
 import { Button } from "@/components/ui/button";
 import { useMealPlannerTools } from "@/hooks/use-meal-planner-tools";
 import { refreshMealPlan } from "@/lib/meal-selection";
+import { version } from "@/package.json";
 import type { Meal } from "@/types/meal";
 
 const STORAGE_KEY = "recipe-picker-plan-v1";
@@ -21,40 +20,38 @@ type MealPlannerProps = {
   initialPlan: Meal[];
 };
 
+function readStoredPlan(meals: Meal[]): { plan?: Meal[]; lockedIds: Set<string> } {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return { lockedIds: new Set() };
+    const parsed = JSON.parse(stored) as StoredPlan;
+    const restoredPlan = parsed.mealIds
+      .map((id) => meals.find((meal) => meal.id === id))
+      .filter((meal): meal is Meal => Boolean(meal));
+    return {
+      plan: restoredPlan.length === 4 ? restoredPlan : undefined,
+      lockedIds: new Set(parsed.lockedIds),
+    };
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+    return { lockedIds: new Set() };
+  }
+}
+
 export function MealPlanner({ meals, initialPlan }: MealPlannerProps) {
-  const [plan, setPlan] = useState(initialPlan);
-  const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
-  const [hasLoaded, setHasLoaded] = useState(false);
+  // The app is client-rendered only, so the saved plan can be read during the first render.
+  const [stored] = useState(() => readStoredPlan(meals));
+  const [plan, setPlan] = useState(stored.plan ?? initialPlan);
+  const [lockedIds, setLockedIds] = useState<Set<string>>(stored.lockedIds);
   const catalogIds = useMemo(() => new Set(meals.map((meal) => meal.id)), [meals]);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as StoredPlan;
-        const restoredPlan = parsed.mealIds
-          .map((id) => meals.find((meal) => meal.id === id))
-          .filter((meal): meal is Meal => Boolean(meal));
-        // Browser-only persistence must be restored after hydration.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (restoredPlan.length === 4) setPlan(restoredPlan);
-        setLockedIds(new Set(parsed.lockedIds));
-      }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    } finally {
-      setHasLoaded(true);
-    }
-  }, [meals]);
-
-  useEffect(() => {
-    if (!hasLoaded) return;
     const stored: StoredPlan = {
       mealIds: plan.map((meal) => meal.id),
       lockedIds: [...lockedIds],
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-  }, [hasLoaded, lockedIds, plan]);
+  }, [lockedIds, plan]);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -148,6 +145,8 @@ export function MealPlanner({ meals, initialPlan }: MealPlannerProps) {
             />
           ))}
         </section>
+
+        <footer className="mt-10 text-center text-xs text-[#765d68]">Recipe Picker v{version}</footer>
       </div>
     </main>
   );

@@ -1,5 +1,3 @@
-"use client";
-
 import { BookOpen, Menu, X } from "lucide-react";
 import { Dialog, DropdownMenu } from "radix-ui";
 import { Button } from "@/components/ui/button";
@@ -84,8 +82,6 @@ export function AppMenu({ meals }: AppMenuProps) {
                 key={meal.id}
                 className="flex min-h-24 items-center gap-4 rounded-2xl border border-[#ead7d2] bg-white p-3 shadow-sm"
               >
-                {/* Images are pre-optimized WebP assets and do not need a server-side image loader. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={meal.image}
                   alt=""

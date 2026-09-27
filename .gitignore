@@ -99,3 +99,7 @@ ENV/
 docs/modules.rst
 docs/datacraft.rst
 docs/datacraft.supplier.rst
+
+# SST
+/.sst/
+/node_modules/
