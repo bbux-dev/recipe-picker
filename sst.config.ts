@@ -37,6 +37,30 @@ export default $config({
     };
   },
   async run() {
+    const headers = await import("./web/security-headers");
+
+    // The same values `vite preview` sends locally (web/security-headers.ts).
+    const responseHeaders = new aws.cloudfront.ResponseHeadersPolicy("MealPickerHeaders", {
+      comment: `mealpicker ${$app.stage} security headers`,
+      securityHeadersConfig: {
+        contentSecurityPolicy: {
+          contentSecurityPolicy: headers.CONTENT_SECURITY_POLICY,
+          override: true,
+        },
+        strictTransportSecurity: {
+          accessControlMaxAgeSec: headers.STRICT_TRANSPORT_SECURITY_MAX_AGE,
+          includeSubdomains: true,
+          override: true,
+        },
+        contentTypeOptions: { override: true },
+        frameOptions: { frameOption: "DENY", override: true },
+        referrerPolicy: { referrerPolicy: "strict-origin-when-cross-origin", override: true },
+      },
+      customHeadersConfig: {
+        items: [{ header: "Permissions-Policy", value: headers.PERMISSIONS_POLICY, override: true }],
+      },
+    });
+
     // "MealPicker" is a frozen logical name: renaming it replaces the bucket and distribution.
     const site = new sst.aws.StaticSite("MealPicker", {
       path: "web",
@@ -54,6 +78,14 @@ export default $config({
           { files: ["**/*.html", "sw.js"], cacheControl: "max-age=0,no-cache,no-store,must-revalidate" },
           { files: "manifest.webmanifest", cacheControl: "max-age=300,public" },
         ],
+      },
+      transform: {
+        cdn: (args) => {
+          args.defaultCacheBehavior = $resolve({
+            behavior: args.defaultCacheBehavior,
+            responseHeadersPolicyId: responseHeaders.id,
+          }).apply(({ behavior, responseHeadersPolicyId }) => ({ ...behavior, responseHeadersPolicyId }));
+        },
       },
     });
 

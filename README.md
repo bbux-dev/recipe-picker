@@ -4,19 +4,41 @@ The maintained application lives in [`web/`](web/). It is a self-contained React
 
 ## Run the current app
 
-```powershell
+```shell
 cd web
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ## Verify it
 
-```powershell
+```shell
 cd web
-npm test
-npm run build
+pnpm lint
+pnpm test
+pnpm build
 ```
+
+## Hosting
+
+The app is deployed as a static site with [SST](https://sst.dev) (`sst.config.ts`): a private S3 bucket behind
+CloudFront, with a Cloudflare DNS record for `mealpicker.bxtn.dev` (stage `prod`) or `mealpicker-dev.bxtn.dev`
+(stage `dev`). The plan and its cost rules are in
+[`.planning/notes/sst-aws-hosting-plan.md`](.planning/notes/sst-aws-hosting-plan.md).
+
+Deploying needs these in the environment (never commit them):
+
+- `AWS_PROFILE` (or another standard AWS credential source) for the target account.
+- `CLOUDFLARE_API_TOKEN`, scoped to Zone:Read and DNS:Edit on the `bxtn.dev` zone only.
+- `CLOUDFLARE_DEFAULT_ACCOUNT_ID`.
+- `MEALPICKER_EXPECTED_AWS_ACCOUNT` (required for `prod`), so a deploy to the wrong account is refused.
+
+```shell
+pnpm install
+bash tools/deploy.sh --stage dev
+```
+
+`prod` is protected and its resources are retained if the stage is removed.
 
 ## Legacy desktop prototype
 
