@@ -1,0 +1,23 @@
+{
+  "name": "Recipe Picker",
+  "short_name": "Recipes",
+  "description": "Pick a balanced week of dinners and keep the meals you love.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7eee8",
+  "theme_color": "#8d4050",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
