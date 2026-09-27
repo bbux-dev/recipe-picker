@@ -25,7 +25,13 @@ Work is split into small chunks. Each chunk:
 session. If any chunk turns up a decision that could cost more than a basic static site (S3 + CloudFront at family
 scale), stop and ask before continuing, even if the chunk is otherwise labeled `Cost: none`.
 
-Chunks 0–7 are local only. Chunks 8–10 touch AWS/Cloudflare.
+Chunks 0–7 are local only. Chunks 8–9 touch AWS/Cloudflare.
+
+**Who deploys:** Claude writes and verifies the code; Brian runs every command that touches AWS or Cloudflare.
+For the cost-gated chunks, Claude supplies the exact commands and checks, and Brian runs them.
+
+**One environment:** this is a small personal app, so there is a single SST stage, `prod`. There is no `dev`
+stage or dev hostname.
 
 ## Current state (verified 2026-09-26)
 
@@ -64,7 +70,6 @@ and Cloudflare DNS record. No Lambda, API Gateway, database, or rendering runtim
 |---|----------|----------------|-------------------------|
 | D1 | Put CloudFront in front of S3 | **Yes** | S3 website endpoints are HTTP-only and cannot serve a custom domain over HTTPS; a PWA and service worker require HTTPS. CloudFront is the AWS-native way to get HTTPS. At family scale usage sits inside CloudFront's always-free tier (1 TB transfer and 10M requests per month at the time of writing); verify on the AWS pricing page. The zero-AWS-CDN alternative is a public S3 website bucket behind a proxied Cloudflare record, which needs a public bucket named after the hostname, sends plain HTTP between Cloudflare and S3, and would not use `StaticSite`. |
 | D2 | Accept `StaticSite`'s extra edge resources | **Yes** | In SST 4.x `StaticSite` also creates a CloudFront Function (URL rewrite) and a CloudFront KeyValueStore (route table), and runs a cache invalidation per deploy. These are billed per request or per path, but at this scale the cost is expected to round to $0: the function invocations should fit the free tier, KVS reads cost cents per million, and the first 1,000 invalidation paths per month are free. |
-| D3 | Deploy a `dev` stage (`mealpicker-dev.bxtn.dev`) before `prod` | **Yes, then remove it** | A second distribution and bucket. The idle cost is effectively $0, but it doubles the resource count. Remove it with `sst remove --stage dev` after prod is verified, unless you want to keep it. |
 | D4 | SST state bootstrap | **Reuse the existing account/region** | SST keeps state in an S3 bucket and an SSM parameter in its home region. If the target account already hosts `lessons-delivery` in `us-east-1`, the bootstrap already exists; otherwise the first deploy creates it (a few cents per month at most). |
 
 **Explicitly excluded** (each would add cost beyond a basic static site; do not add without asking): AWS WAF, Route 53
@@ -76,8 +81,8 @@ Autodeploy, CloudWatch alarms or dashboards, and a Cloudflare-proxied record in 
 - `sst` **4.12.2** (pinned), AWS provider **7.20.0** with `region: "us-east-1"`, Cloudflare provider **6.13.0**
   with only `apiToken` (SST's DNS adapter reads `CLOUDFLARE_DEFAULT_ACCOUNT_ID` from the environment).
 - No static imports at the top of `sst.config.ts`; use dynamic `import()` inside `app()`/`run()`.
-- Stages are exactly `dev` and `prod`; reject anything else in `app()` so a typo cannot create a new stack that
-  claims the prod hostname. `prod` uses `removal: "retain"` and `protect: true`; `dev` uses `removal: "remove"`.
+- A single stage, `prod`; reject anything else in `app()` so a typo cannot create a second stack that claims the
+  hostname. Use `removal: "retain"` and `protect: true`.
 - pnpm with `packageManager` pinned; Node `>=22.12`.
 - Credentials come from the environment (`AWS_PROFILE`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_DEFAULT_ACCOUNT_ID`),
   never from committed files.
@@ -254,7 +259,7 @@ registering the service worker.
 2. Root `sst.config.ts`, following the lang-learning conventions above:
    - `app()`: `name: "mealpicker"`, `home: "aws"`, providers `aws: { version: "7.20.0", region: "us-east-1" }` and
      `cloudflare: { version: "6.13.0", apiToken: process.env.CLOUDFLARE_API_TOKEN }`; throw unless the stage is
-     exactly `dev` or `prod`; for `prod` use `removal: "retain"` and `protect: true`.
+     exactly `prod`; use `removal: "retain"` and `protect: true`.
    - `run()`: dynamically import the headers module and create:
 
      ```ts
@@ -262,7 +267,7 @@ registering the service worker.
        path: "web",
        build: { command: "pnpm run build", output: "dist" },
        domain: {
-         name: $app.stage === "prod" ? "mealpicker.bxtn.dev" : "mealpicker-dev.bxtn.dev",
+         name: "mealpicker.bxtn.dev",
          dns: sst.cloudflare.dns({ proxy: false }),
        },
        assets: {
@@ -305,11 +310,11 @@ Before relying on the `fileOptions` precedence comment, confirm it against
 2. Attach it through `transform.cdn` on the `StaticSite`, setting `defaultCacheBehavior.responseHeadersPolicyId`.
    Confirm the exact arg shape in `.sst/platform/src/components/aws/static-site.ts` and `cdn.ts`, and keep
    `viewerProtocolPolicy: "redirect-to-https"` (the StaticSite default).
-3. Add a deploy script `tools/deploy.sh --stage <dev|prod> [--yes]`, modeled on
-   `../lang-learning/tools/operations/deploy-lessons-delivery.sh`: require `CLOUDFLARE_API_TOKEN` and
-   `CLOUDFLARE_DEFAULT_ACCOUNT_ID`; run `aws sts get-caller-identity` and refuse if the account does not match
-   `MEALPICKER_EXPECTED_AWS_ACCOUNT` (required for prod); require typed stage confirmation unless `--yes`; run
-   `pnpm --dir web install --frozen-lockfile`, `pnpm --dir web test`, and then `pnpm exec sst deploy --stage <stage>`.
+3. Add a deploy script `tools/deploy.sh` (no arguments; always stage `prod`), modeled on
+   `../lang-learning/tools/operations/deploy-lessons-delivery.sh`: require `CLOUDFLARE_API_TOKEN`,
+   `CLOUDFLARE_DEFAULT_ACCOUNT_ID`, and `MEALPICKER_EXPECTED_AWS_ACCOUNT`; run `aws sts get-caller-identity` and
+   refuse if the account does not match; then install, lint, and test `web/` and run
+   `pnpm exec sst deploy --stage prod`.
 4. Document the credentials in the root `README.md`: `AWS_PROFILE`, a Cloudflare token scoped to **Zone:Read +
    DNS:Edit on `bxtn.dev` only**, and the account ID. Nothing is committed.
 
@@ -318,65 +323,52 @@ Verify:
 ```shell
 pnpm typecheck                                          # passes
 bash -n tools/deploy.sh && shellcheck tools/deploy.sh   # clean (if shellcheck is installed)
-env -u CLOUDFLARE_API_TOKEN bash tools/deploy.sh --stage dev   # exits non-zero with a clear message before any AWS call
-bash tools/deploy.sh --stage staging                    # rejected: unknown stage
+env -u CLOUDFLARE_API_TOKEN bash tools/deploy.sh      # exits non-zero with a clear message before any AWS call
+MEALPICKER_EXPECTED_AWS_ACCOUNT=111111111111 bash tools/deploy.sh   # refused: account mismatch
+pnpm exec sst install --stage dev                      # rejected by app(): only prod exists
 ```
 
-## Chunk 8: First deploy to `dev`
+## Chunk 8: Production deploy (Brian runs)
 
-**Cost: GATE.** Stop and get approval for D1–D4, the AWS account or profile to use, and confirmation that the
-Cloudflare token exists.
+**Cost: GATE** (approved 2026-09-26: D1, D2, D4; AWS profile `rembr-dev`, account `040678946710`; Cloudflare token
+shared with lang-learning).
 
-1. Optionally, as a read-only check, confirm DNSSEC on `bxtn.dev`: `dig +dnssec bxtn.dev DS` shows a DS record, and
-   the Cloudflare dashboard shows DNSSEC as active.
-2. `bash tools/deploy.sh --stage dev`. The first run takes a while because ACM validation and CloudFront propagation
-   run 5–15 minutes.
-3. Record the outputs (URL, distribution ID) in the commit message or the README, not in code.
+Commands, from the repo root:
+
+```shell
+aws sso login --profile rembr-dev          # only if the SSO session has expired
+set -a; source ../lang-learning/.env; set +a
+export MEALPICKER_EXPECTED_AWS_ACCOUNT=040678946710
+pnpm install
+bash tools/deploy.sh
+```
+
+The first run takes 5–15 minutes because ACM validation and CloudFront propagation are slow.
 
 Verify:
 
 ```shell
-curl -sI http://mealpicker-dev.bxtn.dev/ | head -3                      # 301 to https
-curl -sI https://mealpicker-dev.bxtn.dev/ | grep -iE "^HTTP|cache-control|content-security|strict-transport|x-cache"
-curl -sI https://mealpicker-dev.bxtn.dev/sw.js | grep -i cache-control          # no-cache
-curl -sI https://mealpicker-dev.bxtn.dev/assets/<hashed>.js | grep -i cache-control   # max-age=31536000, immutable
-curl -sI https://mealpicker-dev.bxtn.dev/manifest.webmanifest | grep -i cache-control # max-age=300
-dig +short mealpicker-dev.bxtn.dev CNAME                                 # *.cloudfront.net
-echo | openssl s_client -connect mealpicker-dev.bxtn.dev:443 -servername mealpicker-dev.bxtn.dev 2>/dev/null | openssl x509 -noout -subject -dates
-aws s3api get-public-access-block --bucket <bucket>                      # all four true
+curl -sI http://mealpicker.bxtn.dev/ | head -3                                   # 301 to https
+curl -sI https://mealpicker.bxtn.dev/ | grep -iE "^HTTP|cache-control|content-security|strict-transport|nosniff|referrer|permissions|frame-options"
+curl -sI https://mealpicker.bxtn.dev/sw.js | grep -i cache-control              # no-cache
+curl -sI https://mealpicker.bxtn.dev/manifest.webmanifest | grep -iE "cache-control|content-type"   # max-age=300, application/manifest+json
+curl -sI "https://mealpicker.bxtn.dev$(curl -s https://mealpicker.bxtn.dev/ | grep -o '/assets/index-[^"]*\.js')" | grep -i cache-control   # max-age=31536000, immutable
+dig +short mealpicker.bxtn.dev                                                   # CloudFront addresses (CNAME to *.cloudfront.net)
+echo | openssl s_client -connect mealpicker.bxtn.dev:443 -servername mealpicker.bxtn.dev 2>/dev/null | openssl x509 -noout -subject -dates
+node tools/smoke.mjs https://mealpicker.bxtn.dev/                                # all PASS
+dig +short bxtn.dev DS                                                           # optional: non-empty means DNSSEC is on
 ```
 
-Then run the browser smoke test against the live site (it fails on certificate errors, CSP violations, broken
-images, lost persistence, or a failed offline reload):
+Then on a phone: install the PWA, shuffle and lock meals, reload (the plan persists), and go offline and reopen it.
 
-```shell
-node tools/smoke.mjs https://mealpicker-dev.bxtn.dev/
-```
+## Chunk 9: Update round-trip (Brian runs)
 
-## Chunk 9: Production deploy
+**Cost: GATE** (one small redeploy, covered by the approval above).
 
-**Cost: GATE.** Get approval to deploy `prod`.
-
-1. `MEALPICKER_EXPECTED_AWS_ACCOUNT=<id> bash tools/deploy.sh --stage prod`.
-2. Repeat every Chunk 8 check, including `node tools/smoke.mjs https://mealpicker.bxtn.dev/`, against
-   `mealpicker.bxtn.dev`.
-3. Test on desktop and mobile: install the PWA, shuffle and lock meals, reload (the plan persists), then go offline
-   and navigate again.
-4. Run Lighthouse against production for installability and accessibility.
-5. Remove the dev stage (`pnpm exec sst remove --stage dev`, **Cost: GATE**, needs approval) unless you want to keep
-   it.
-
-## Chunk 10: Update round-trip and docs
-
-**Cost: GATE** (one small redeploy).
-
-1. Make a visible, trivial change (for example, the footer text or a new `CACHE_NAME`), then deploy `prod` again.
-2. Verify: the SST output shows one invalidation; a hard reload shows the change immediately; an installed PWA picks
-   up the new service worker after one reload (DevTools shows the old worker replaced); `index.html` is never served
-   stale by CloudFront (`x-cache: Miss from cloudfront` or `RefreshHit` after the deploy).
-3. Update the root `README.md` with a short operations section covering deploy, stages, credentials, how to add a
-   recipe or image (new filename rule), and teardown (`prod` is retained and protected, so removal needs an
-   explicit override).
+1. Claude makes a visible, trivial change (for example, the header subtitle) and bumps `CACHE_NAME`.
+2. Brian runs `bash tools/deploy.sh` again.
+3. Verify: the SST output shows one invalidation; a normal reload shows the change; an installed PWA picks up the new
+   service worker after one reload; `node tools/smoke.mjs https://mealpicker.bxtn.dev/` passes.
 4. Mark this note's handoff status as complete.
 
 ---
@@ -397,6 +389,6 @@ state. There is no continuously running compute. Cloudflare only provides author
 - [x] Chunk 5: security headers (local) (2432d58; strict `style-src 'self'` works, no `unsafe-inline` needed)
 - [x] Chunk 6: SST scaffolding (df2c716; `fileOptions` precedence confirmed in SST 4.12.2 source)
 - [x] Chunk 7: CloudFront headers plus deploy script (2171880, plus `tools/smoke.mjs`; the headers transform is only provable after the Chunk 8 deploy)
-- [ ] Chunk 8: dev deploy (**cost gate**)
-- [ ] Chunk 9: prod deploy (**cost gate**)
-- [ ] Chunk 10: update round-trip and docs (**cost gate**)
+- [x] Single-stage simplification (prod only; Brian deploys)
+- [ ] Chunk 8: prod deploy (**cost gate**, Brian runs)
+- [ ] Chunk 9: update round-trip (**cost gate**, Brian runs)

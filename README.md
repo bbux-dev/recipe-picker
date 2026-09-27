@@ -21,24 +21,24 @@ pnpm build
 
 ## Hosting
 
-The app is deployed as a static site with [SST](https://sst.dev) (`sst.config.ts`): a private S3 bucket behind
-CloudFront, with a Cloudflare DNS record for `mealpicker.bxtn.dev` (stage `prod`) or `mealpicker-dev.bxtn.dev`
-(stage `dev`). The plan and its cost rules are in
-[`.planning/notes/sst-aws-hosting-plan.md`](.planning/notes/sst-aws-hosting-plan.md).
+The app is deployed as a static site with [SST](https://sst.dev) (`sst.config.ts`, single stage `prod`): a private
+S3 bucket behind CloudFront, with a Cloudflare DNS record for `mealpicker.bxtn.dev`. The plan and its cost rules are
+in [`.planning/notes/sst-aws-hosting-plan.md`](.planning/notes/sst-aws-hosting-plan.md).
 
-Deploying needs these in the environment (never commit them):
+Deploying needs these in the environment (never commit them). The same values as `../lang-learning/.env` work:
 
-- `AWS_PROFILE` (or another standard AWS credential source) for the target account.
+- `AWS_PROFILE=rembr-dev` (or another AWS credential source for the target account).
 - `CLOUDFLARE_API_TOKEN`, scoped to Zone:Read and DNS:Edit on the `bxtn.dev` zone only.
 - `CLOUDFLARE_DEFAULT_ACCOUNT_ID`.
-- `MEALPICKER_EXPECTED_AWS_ACCOUNT` (required for `prod`), so a deploy to the wrong account is refused.
+- `MEALPICKER_EXPECTED_AWS_ACCOUNT`, so a deploy to the wrong account is refused.
 
 ```shell
 pnpm install
-bash tools/deploy.sh --stage dev
+bash tools/deploy.sh
+node tools/smoke.mjs https://mealpicker.bxtn.dev/   # browser smoke test against the live site
 ```
 
-`prod` is protected and its resources are retained if the stage is removed.
+The stage is protected and its resources are retained if it is ever removed.
 
 ## Legacy desktop prototype
 

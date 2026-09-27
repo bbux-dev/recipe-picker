@@ -3,27 +3,22 @@
 // SST app for the static Recipe Picker PWA (see .planning/notes/sst-aws-hosting-plan.md).
 //
 // Conventions follow ../lang-learning/infra: region pinned to us-east-1 (CloudFront needs its
-// ACM certificate there anyway), the Cloudflare provider takes only the API token (SST's DNS
-// adapter reads CLOUDFLARE_DEFAULT_ACCOUNT_ID from the environment), and the only stages
-// are "dev" and "prod". The stage string is SST's state namespace, so anything else is
-// rejected rather than creating a second stack that claims a mealpicker hostname.
+// ACM certificate there anyway) and the Cloudflare provider takes only the API token (SST's DNS
+// adapter reads CLOUDFLARE_DEFAULT_ACCOUNT_ID from the environment).
+//
+// There is a single stage, "prod". The stage string is SST's state namespace, so any other
+// stage is rejected rather than creating a second stack that claims the same hostname.
 //
 // No static imports at the top of this file: SST evaluates it before providers are installed.
 
-const STAGES = ["dev", "prod"];
-
-const HOSTS: Record<string, string> = {
-  dev: "mealpicker-dev.bxtn.dev",
-  prod: "mealpicker.bxtn.dev",
-};
+const STAGE = "prod";
+const HOST = "mealpicker.bxtn.dev";
 
 export default $config({
   app(input) {
-    const stage = input?.stage;
-    if (!stage || !STAGES.includes(stage)) {
-      throw new Error(`Unknown stage "${stage}". Use --stage dev or --stage prod.`);
+    if (input?.stage !== STAGE) {
+      throw new Error(`Unknown stage "${input?.stage}". This app only deploys --stage ${STAGE}.`);
     }
-    const isProd = stage === "prod";
 
     return {
       name: "mealpicker",
@@ -32,8 +27,8 @@ export default $config({
         aws: { version: "7.20.0", region: "us-east-1" },
         cloudflare: { version: "6.13.0", apiToken: process.env.CLOUDFLARE_API_TOKEN },
       },
-      removal: isProd ? "retain" : "remove",
-      protect: isProd,
+      removal: "retain",
+      protect: true,
     };
   },
   async run() {
@@ -41,7 +36,7 @@ export default $config({
 
     // The same values `vite preview` sends locally (web/security-headers.ts).
     const responseHeaders = new aws.cloudfront.ResponseHeadersPolicy("MealPickerHeaders", {
-      comment: `mealpicker ${$app.stage} security headers`,
+      comment: "mealpicker security headers",
       securityHeadersConfig: {
         contentSecurityPolicy: {
           contentSecurityPolicy: headers.CONTENT_SECURITY_POLICY,
@@ -69,7 +64,7 @@ export default $config({
         output: "dist",
       },
       domain: {
-        name: HOSTS[$app.stage],
+        name: HOST,
         dns: sst.cloudflare.dns({ proxy: false }),
       },
       assets: {
