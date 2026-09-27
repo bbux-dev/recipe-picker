@@ -33,3 +33,9 @@ pnpm preview   # serve dist/ at http://localhost:4173
 - `public/manifest.webmanifest` and `public/sw.js` provide installation and offline support.
 
 The current plan and locks are stored in `localStorage`; no backend is required.
+
+## Images and caching
+
+Files in `public/assets/` are served with a one-year immutable `Cache-Control` header. When you replace an image,
+give it a new filename and update `data/meals.json`; reusing a filename can leave the old image cached on devices
+and at the CDN.
