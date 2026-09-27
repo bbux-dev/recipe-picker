@@ -346,14 +346,20 @@ echo | openssl s_client -connect mealpicker-dev.bxtn.dev:443 -servername mealpic
 aws s3api get-public-access-block --bucket <bucket>                      # all four true
 ```
 
-Then in a browser, run the Chunk 4 service-worker and offline checks and confirm zero CSP console errors.
+Then run the browser smoke test against the live site (it fails on certificate errors, CSP violations, broken
+images, lost persistence, or a failed offline reload):
+
+```shell
+node tools/smoke.mjs https://mealpicker-dev.bxtn.dev/
+```
 
 ## Chunk 9: Production deploy
 
 **Cost: GATE.** Get approval to deploy `prod`.
 
 1. `MEALPICKER_EXPECTED_AWS_ACCOUNT=<id> bash tools/deploy.sh --stage prod`.
-2. Repeat every Chunk 8 check against `mealpicker.bxtn.dev`.
+2. Repeat every Chunk 8 check, including `node tools/smoke.mjs https://mealpicker.bxtn.dev/`, against
+   `mealpicker.bxtn.dev`.
 3. Test on desktop and mobile: install the PWA, shuffle and lock meals, reload (the plan persists), then go offline
    and navigate again.
 4. Run Lighthouse against production for installability and accessibility.
@@ -384,13 +390,13 @@ state. There is no continuously running compute. Cloudflare only provides author
 ## Handoff status
 
 - [x] Chunk 0: recover `web/lib`, fix `.gitignore` (3cf82e2)
-- [ ] Chunk 1: pnpm only
-- [ ] Chunk 2: static Vite entry
-- [ ] Chunk 3: remove Next/Vinext/Cloudflare tooling
-- [ ] Chunk 4: service worker review
-- [ ] Chunk 5: security headers (local)
-- [ ] Chunk 6: SST scaffolding
-- [ ] Chunk 7: CloudFront headers plus deploy script
+- [x] Chunk 1: pnpm only (b4b55fc; pinned `pnpm@11.1.2`, which produced the lockfile)
+- [x] Chunk 2: static Vite entry (c5c0149)
+- [x] Chunk 3: remove Next/Vinext/Cloudflare tooling (173f3cd; also moved the saved-plan read out of an effect into lazy state init, since there is no SSR)
+- [x] Chunk 4: service worker review (a67a270)
+- [x] Chunk 5: security headers (local) (2432d58; strict `style-src 'self'` works, no `unsafe-inline` needed)
+- [x] Chunk 6: SST scaffolding (df2c716; `fileOptions` precedence confirmed in SST 4.12.2 source)
+- [x] Chunk 7: CloudFront headers plus deploy script (2171880, plus `tools/smoke.mjs`; the headers transform is only provable after the Chunk 8 deploy)
 - [ ] Chunk 8: dev deploy (**cost gate**)
 - [ ] Chunk 9: prod deploy (**cost gate**)
 - [ ] Chunk 10: update round-trip and docs (**cost gate**)

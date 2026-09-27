@@ -11,6 +11,9 @@ importers:
       '@types/node':
         specifier: 22.19.19
         version: 22.19.19
+      playwright-core:
+        specifier: ^1.63.0
+        version: 1.63.0
       sst:
         specifier: 4.12.2
         version: 4.12.2
@@ -141,6 +144,11 @@ packages:
 
   openid-client@5.6.4:
     resolution: {integrity: sha512-T1h3B10BRPKfcObdBklX639tVz+xh34O7GjofqrqiAQdm7eHsQ00ih18x6wuJ/E6FxdtS2u3FmUGPDeEcMwzNA==}
+
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   sst-darwin-arm64@4.12.2:
     resolution: {integrity: sha512-aC78EsxrXByYJ4MQ2EzHkt1CzZrEkRBBosM1cjjdVYhZMWc0izwk6qFBZ3cXFL0YgdoEf0HKpE6yXyGX/ArT6g==}
@@ -410,6 +418,8 @@ snapshots:
       lru-cache: 6.0.0
       object-hash: 2.2.0
       oidc-token-hash: 5.2.0
+
+  playwright-core@1.63.0: {}
 
   sst-darwin-arm64@4.12.2:
     optional: true
