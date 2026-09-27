@@ -7,8 +7,8 @@ to a responsive web app.
 ## Run locally
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Open `http://localhost:5173`.
@@ -16,12 +16,15 @@ Open `http://localhost:5173`.
 ## Checks
 
 ```bash
-npm test
-npm run build
+pnpm lint
+pnpm test
+pnpm build     # static site in dist/
+pnpm preview   # serve dist/ at http://localhost:4173
 ```
 
 ## Structure
 
+- `index.html` and `src/main.tsx` are the static entry point; `src/globals.css` holds the theme.
 - `components/meal-planner.tsx` owns the planner interaction and device-local persistence.
 - `components/meal-card.tsx` renders one accessible, reusable meal card.
 - `lib/meal-selection.ts` contains framework-independent selection rules.

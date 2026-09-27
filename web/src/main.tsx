@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { MealPlanner } from "@/components/meal-planner";
 import { meals } from "@/data/meals";
 import { selectMeals } from "@/lib/meal-selection";
-import "../app/globals.css";
+import "./globals.css";
 
 const initialPlan = selectMeals(meals, { random: () => 0.42 });
 
