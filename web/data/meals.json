@@ -14,7 +14,7 @@
   {"name": "Buddha Bowl", "ethnicity": "Fusion", "difficulty": "medium", "image": "assets/buddhabowl.png", "disliked_by": []},
   {"name": "Quinoa Bowl", "ethnicity": "Fusion", "difficulty": "easy", "image": "assets/quinoabowl.png", "disliked_by": []},
   {"name": "Spanish Tortilla", "ethnicity": "Spanish", "difficulty": "hard", "image": "assets/spanishtortilla.png", "disliked_by": ["Lena"]},
-  {"name": "Spaghetti with Vegetarian Meat Sauce", "ethnicity": "Italian", "difficulty": "easy", "image": "assets/vegspaghetti.png", "disliked_by": []},
+  {"name": "Impossible Spaghetti", "ethnicity": "Italian", "difficulty": "easy", "image": "assets/vegspaghetti.png", "disliked_by": []},
   {"name": "Quesadillas", "ethnicity": "Mexican", "difficulty": "easy", "image": "assets/quesadillas.png", "disliked_by": []},
   {"name": "English Breakfast for Dinner", "ethnicity": "British", "difficulty": "hard", "image": "assets/englishbreakfast.png", "disliked_by": []},
   {"name": "Tofu Rama", "ethnicity": "Thai", "difficulty": "medium", "image": "assets/tofurama.png", "disliked_by": []},
@@ -25,6 +25,7 @@
   {"name": "Ikea Meat Balls", "ethnicity": "Swedish", "difficulty": "easy", "image": "assets/ikeameatballs.png", "disliked_by": []},
   {"name": "Salmon with Veggie", "ethnicity": "Various", "difficulty": "medium", "image": "assets/salmonveggie.png", "disliked_by": []},
   {"name": "Burritos", "ethnicity": "Mexican", "difficulty": "easy", "image": "assets/burritos.png", "disliked_by": []},
+  {"name": "Roasted Veggie Burritos", "ethnicity": "Mexican", "difficulty": "medium", "image": "assets/burritos.png", "disliked_by": []},
   {"name": "Fajitas", "ethnicity": "Mexican", "difficulty": "medium", "image": "assets/fajitas.png", "disliked_by": []},
   {"name": "Israeli Cous Cous", "ethnicity": "Middle Eastern", "difficulty": "easy", "image": "assets/israelicouscous.png", "disliked_by": ["Jane"]},
   {"name": "Ravioli", "ethnicity": "Italian", "difficulty": "easy", "image": "assets/ravioli.png", "disliked_by": ["Jane"]},
@@ -42,4 +43,3 @@
   {"name": "Spring Rolls", "ethnicity":  "Asian", "difficulty": "medium", "image": "assets/springrolls.png"},
   {"name": "Something new and interesting", "ethnicity": "French", "difficulty": "hard", "image": "assets/newandinteresting.png", "disliked_by": []}
 ]
-

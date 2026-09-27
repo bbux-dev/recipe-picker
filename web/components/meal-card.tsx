@@ -21,6 +21,8 @@ export function MealCard({ meal, index, locked, onLockChange }: MealCardProps) {
   return (
     <article className="group overflow-hidden rounded-[1.75rem] border border-white/60 bg-white shadow-[0_22px_70px_-35px_rgba(50,23,35,0.55)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_-34px_rgba(50,23,35,0.65)]">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#eaded5]">
+        {/* Images are pre-optimized WebP assets and do not need a server-side image loader. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={meal.image}
           alt={meal.name}

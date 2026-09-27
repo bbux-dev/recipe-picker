@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw, Sparkles, UtensilsCrossed } from "lucide-react";
+import { AppMenu } from "@/components/app-menu";
 import { MealCard } from "@/components/meal-card";
 import { Button } from "@/components/ui/button";
 import { useMealPlannerTools } from "@/hooks/use-meal-planner-tools";
@@ -34,6 +35,8 @@ export function MealPlanner({ meals, initialPlan }: MealPlannerProps) {
         const restoredPlan = parsed.mealIds
           .map((id) => meals.find((meal) => meal.id === id))
           .filter((meal): meal is Meal => Boolean(meal));
+        // Browser-only persistence must be restored after hydration.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (restoredPlan.length === 4) setPlan(restoredPlan);
         setLockedIds(new Set(parsed.lockedIds));
       }
@@ -101,9 +104,12 @@ export function MealPlanner({ meals, initialPlan }: MealPlannerProps) {
               <p className="text-sm text-[#765d68]">This week&apos;s dinner plan</p>
             </div>
           </div>
-          <span className="hidden rounded-full border border-[#d7bbb4] bg-white/45 px-4 py-2 text-sm font-semibold text-[#765d68] backdrop-blur sm:block">
-            {lockedIds.size} of 4 saved
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="hidden rounded-full border border-[#d7bbb4] bg-white/45 px-4 py-2 text-sm font-semibold text-[#765d68] backdrop-blur sm:block">
+              {lockedIds.size} of 4 saved
+            </span>
+            <AppMenu meals={meals} />
+          </div>
         </header>
 
         <section className="mb-8 grid items-end gap-6 lg:grid-cols-[1fr_auto]">
