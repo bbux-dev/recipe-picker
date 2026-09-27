@@ -389,5 +389,7 @@ state. There is no continuously running compute. Cloudflare only provides author
 - [x] Chunk 6: SST scaffolding (df2c716; `fileOptions` precedence confirmed in SST 4.12.2 source)
 - [x] Chunk 7: CloudFront headers plus deploy script (2171880, plus `tools/smoke.mjs`; the headers transform is only provable after the Chunk 8 deploy)
 - [x] Single-stage simplification (prod only; Brian deploys)
-- [ ] Chunk 8: prod deploy (**cost gate**, Brian runs)
+- [x] Chunk 8: prod deploy (2026-09-27; CloudFront `d198blypkwgz8q.cloudfront.net`. Headers, cache policies, MIME
+      types, Amazon cert and the live smoke test all verified. Notes: unknown paths return `index.html` with 200 (the
+      StaticSite SPA fallback; harmless here), and `bxtn.dev` has no DS record, so DNSSEC is not enabled)
 - [ ] Chunk 9: update round-trip (**cost gate**, Brian runs)
