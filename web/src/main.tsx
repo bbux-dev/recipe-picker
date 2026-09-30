@@ -5,7 +5,7 @@ import { meals } from "@/data/meals";
 import { selectMeals } from "@/lib/meal-selection";
 import "./globals.css";
 
-const initialPlan = selectMeals(meals, { random: () => 0.42 });
+const initialPlan = selectMeals(meals);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

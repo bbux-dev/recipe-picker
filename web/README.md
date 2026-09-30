@@ -32,7 +32,8 @@ pnpm preview   # serve dist/ at http://localhost:4173
 - `public/assets` contains web-optimized copies of the original meal photos.
 - `public/manifest.webmanifest` and `public/sw.js` provide installation and offline support.
 
-The current plan and locks are stored in `localStorage`; no backend is required.
+The current plan and locks are cached in `localStorage` for one hour. Reloading the page clears that cache and
+starts with a fresh randomized plan; no backend is required.
 
 ## Images and caching
 

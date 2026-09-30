@@ -9,10 +9,12 @@ import { version } from "@/package.json";
 import type { Meal } from "@/types/meal";
 
 const STORAGE_KEY = "recipe-picker-plan-v1";
+const STORAGE_TTL_MS = 60 * 60 * 1000;
 
 type StoredPlan = {
   mealIds: string[];
   lockedIds: string[];
+  cachedAt: number;
 };
 
 type MealPlannerProps = {
@@ -20,17 +22,36 @@ type MealPlannerProps = {
   initialPlan: Meal[];
 };
 
-function readStoredPlan(meals: Meal[]): { plan?: Meal[]; lockedIds: Set<string> } {
+function readStoredPlan(meals: Meal[]): {
+  plan?: Meal[];
+  lockedIds: Set<string>;
+  cachedAt?: number;
+} {
   try {
+    const navigation = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (navigation?.type === "reload") {
+      localStorage.removeItem(STORAGE_KEY);
+      return { lockedIds: new Set() };
+    }
+
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return { lockedIds: new Set() };
+
     const parsed = JSON.parse(stored) as StoredPlan;
+    if (!parsed.cachedAt || Date.now() - parsed.cachedAt >= STORAGE_TTL_MS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return { lockedIds: new Set() };
+    }
+
     const restoredPlan = parsed.mealIds
       .map((id) => meals.find((meal) => meal.id === id))
       .filter((meal): meal is Meal => Boolean(meal));
     return {
       plan: restoredPlan.length === 4 ? restoredPlan : undefined,
       lockedIds: new Set(parsed.lockedIds),
+      cachedAt: parsed.cachedAt,
     };
   } catch {
     localStorage.removeItem(STORAGE_KEY);
@@ -39,19 +60,20 @@ function readStoredPlan(meals: Meal[]): { plan?: Meal[]; lockedIds: Set<string> 
 }
 
 export function MealPlanner({ meals, initialPlan }: MealPlannerProps) {
-  // The app is client-rendered only, so the saved plan can be read during the first render.
   const [stored] = useState(() => readStoredPlan(meals));
   const [plan, setPlan] = useState(stored.plan ?? initialPlan);
   const [lockedIds, setLockedIds] = useState<Set<string>>(stored.lockedIds);
+  const [cachedAt] = useState(() => stored.cachedAt ?? Date.now());
   const catalogIds = useMemo(() => new Set(meals.map((meal) => meal.id)), [meals]);
 
   useEffect(() => {
     const stored: StoredPlan = {
       mealIds: plan.map((meal) => meal.id),
       lockedIds: [...lockedIds],
+      cachedAt,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-  }, [lockedIds, plan]);
+  }, [cachedAt, lockedIds, plan]);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
